@@ -9,8 +9,8 @@ const contentSecurityPolicy = `
   img-src 'self' data: https:;
   font-src 'self' data:;
   style-src 'self' 'unsafe-inline';
-  script-src 'self' 'unsafe-inline' https://js.stripe.com;
-  connect-src 'self' https://api.openai.com https://api.anthropic.com https://api.perplexity.ai https://api.stripe.com https://*.supabase.co;
+  script-src 'self' 'unsafe-inline' https://js.stripe.com https://*.clarity.ms https://c.bing.com;
+  connect-src 'self' https://api.openai.com https://api.anthropic.com https://api.perplexity.ai https://api.stripe.com https://*.supabase.co https://*.clarity.ms https://c.bing.com;
   frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com;
   form-action 'self' https://checkout.stripe.com;
   upgrade-insecure-requests;
