@@ -1,15 +1,14 @@
 import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/app/lib/metadata';
 import PourQuiPageExperience from '@/app/components/pour-qui-page-experience';
 import { pourQuiPageMeta, pourQuiSegments } from '@/app/lib/pour-qui-content';
 import { getSiteUrl } from '@/app/lib/site-url';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: pourQuiPageMeta.documentTitle,
   description: pourQuiPageMeta.seoDescription,
-  alternates: {
-    canonical: pourQuiPageMeta.path,
-  },
-};
+  path: pourQuiPageMeta.path,
+});
 
 export default function PourQuiPage() {
   const siteUrl = getSiteUrl();

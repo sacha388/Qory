@@ -1,16 +1,15 @@
 import type { Metadata } from 'next';
 import AuditFlowPage from '@/app/components/audit-flow-page';
+import { buildPageMetadata } from '@/app/lib/metadata';
 
 const pageDescription =
   'Lancez votre audit Qory, répondez à quelques questions, puis débloquez votre rapport complet de visibilité IA.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Audit Qory | Lancez votre analyse de visibilité IA',
   description: pageDescription,
-  alternates: {
-    canonical: '/audit',
-  },
-};
+  path: '/audit',
+});
 
 type AuditPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;

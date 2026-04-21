@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import SecondaryPageHero from '@/app/components/secondary-page-hero';
 import SecondaryPageShell from '@/app/components/secondary-page-shell';
+import { buildPageMetadata } from '@/app/lib/metadata';
 import { TypeOptionIcon } from '@/app/components/paid-scan-questionnaire-icons';
 import { getSiteUrl } from '@/app/lib/site-url';
 import { useCaseFamilies } from '@/app/lib/use-cases-content';
@@ -11,13 +12,11 @@ import type { PaidScanBusinessType } from '@/types';
 const pageDescription =
   'Choisissez votre marché, puis découvrez comment Qory adapte ses pages et son audit à votre business.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Cas d’usage Qory | Choisissez votre marché',
   description: pageDescription,
-  alternates: {
-    canonical: '/cas-usage',
-  },
-};
+  path: '/cas-usage',
+});
 
 const FAMILY_SLUG_BY_TYPE: Record<PaidScanBusinessType, string> = {
   commerce_restauration: 'commerces-restauration',

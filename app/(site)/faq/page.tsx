@@ -1,15 +1,14 @@
 import type { Metadata } from 'next';
 import FaqPageExperience from '@/app/components/faq-page-experience';
 import { faqChapters, faqPageMeta } from '@/app/lib/faq-page-content';
+import { buildPageMetadata } from '@/app/lib/metadata';
 import { getSiteUrl } from '@/app/lib/site-url';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: faqPageMeta.documentTitle,
   description: faqPageMeta.seoDescription,
-  alternates: {
-    canonical: faqPageMeta.path,
-  },
-};
+  path: faqPageMeta.path,
+});
 
 export default function FaqPage() {
   const siteUrl = getSiteUrl();

@@ -3,18 +3,17 @@ import Link from 'next/link';
 import ResourceArticleVisual from '@/app/components/resource-article-visual';
 import RessourcesBlogHero from '@/app/components/ressources-blog-hero';
 import SecondaryPageShell from '@/app/components/secondary-page-shell';
+import { buildPageMetadata } from '@/app/lib/metadata';
 import { resourceArticles } from '@/app/lib/resources-content';
 
 const pageDescription =
   'Ressources Qory : articles et guides pour comprendre la visibilité IA, les citations dans les assistants et les actions prioritaires à mener.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Ressources Qory | Articles et guides GEO',
   description: pageDescription,
-  alternates: {
-    canonical: '/ressources',
-  },
-};
+  path: '/ressources',
+});
 
 export default function RessourcesPage() {
   return (

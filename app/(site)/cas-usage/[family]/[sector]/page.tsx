@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import SecondaryPageShell from '@/app/components/secondary-page-shell';
+import { buildPageMetadata } from '@/app/lib/metadata';
 import { getSiteUrl } from '@/app/lib/site-url';
 import {
   getUseCaseFamilyBySlug,
@@ -35,13 +36,11 @@ export async function generateMetadata({
     };
   }
 
-  return {
+  return buildPageMetadata({
     title: `${sectorData.title} | Qory`,
     description: sectorData.summary,
-    alternates: {
-      canonical: getUseCaseSectorHref(familyData.slug, sectorData),
-    },
-  };
+    path: getUseCaseSectorHref(familyData.slug, sectorData),
+  });
 }
 
 export default async function UseCaseSectorPlaceholderPage({

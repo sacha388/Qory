@@ -1,17 +1,16 @@
 import type { Metadata } from 'next';
 import VisionPageExperience from '@/app/components/vision-page-experience';
+import { buildPageMetadata } from '@/app/lib/metadata';
 import { getSiteUrl } from '@/app/lib/site-url';
 
 const path = '/vision';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Vision | Qory',
   description:
     'Qory lit la nouvelle couche de visibilité des marques dans les réponses des intelligences artificielles.',
-  alternates: {
-    canonical: path,
-  },
-};
+  path,
+});
 
 export default function VisionPage() {
   const siteUrl = getSiteUrl();

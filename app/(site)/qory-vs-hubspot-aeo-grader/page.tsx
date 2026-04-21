@@ -1,17 +1,16 @@
 import type { Metadata } from 'next';
 import ProductComparisonPage from '@/app/components/product-comparison-page';
 import { qoryVsHubspotPage } from '@/app/lib/comparison-pages-content';
+import { buildPageMetadata } from '@/app/lib/metadata';
 import { getSiteUrl } from '@/app/lib/site-url';
 
 const page = qoryVsHubspotPage;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: `${page.seoTitle} | Qory`,
   description: page.seoDescription,
-  alternates: {
-    canonical: page.path,
-  },
-};
+  path: page.path,
+});
 
 export default function QoryVsHubspotPage() {
   const siteUrl = getSiteUrl();

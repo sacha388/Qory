@@ -1,16 +1,15 @@
 import type { Metadata } from 'next';
 import StaticInfoPage from '@/app/components/static-info-page';
+import { buildPageMetadata } from '@/app/lib/metadata';
 
 const pageDescription =
   'Sécurité et protection des données Qory (qory.fr) : principes, paiement Stripe, contrôle d’accès, validation, SSRF, minimisation, journaux, incidents, prestataires, limites, signalement et lien avec la confidentialité.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Sécurité et protection des données Qory | qory.fr',
   description: pageDescription,
-  alternates: {
-    canonical: '/securite',
-  },
-};
+  path: '/securite',
+});
 
 export default function SecuritePage() {
   return (

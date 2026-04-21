@@ -1,16 +1,15 @@
 import type { Metadata } from 'next';
 import StaticInfoPage from '@/app/components/static-info-page';
+import { buildPageMetadata } from '@/app/lib/metadata';
 
 const pageDescription =
   'Mentions légales de Qory (qory.fr) : éditeur, hébergement, propriété intellectuelle, responsabilité, liens, données, droit applicable et juridiction (LCEN).';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Mentions légales Qory | Éditeur, hébergeur et responsabilité',
   description: pageDescription,
-  alternates: {
-    canonical: '/mentions-legales',
-  },
-};
+  path: '/mentions-legales',
+});
 
 export default function MentionsLegalesPage() {
   return (

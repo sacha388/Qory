@@ -1,15 +1,14 @@
 import type { Metadata } from 'next';
 import ContactPageExperience from '@/app/components/contact-page-experience';
 import { contactPageMeta } from '@/app/lib/contact-page-content';
+import { buildPageMetadata } from '@/app/lib/metadata';
 import { getSiteUrl } from '@/app/lib/site-url';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: contactPageMeta.documentTitle,
   description: contactPageMeta.seoDescription,
-  alternates: {
-    canonical: contactPageMeta.path,
-  },
-};
+  path: contactPageMeta.path,
+});
 
 export default function ContactPage() {
   const siteUrl = getSiteUrl();

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/app/lib/metadata';
 import { notFound } from 'next/navigation';
 import UseCaseSectorPage from '@/app/components/use-case-sector-page';
 import {
@@ -10,13 +11,11 @@ const pageData = getReadyUseCaseSectorPageBySlug('medias');
 const familyData = pageData ? getUseCaseFamilyBySlug(pageData.familySlug) : undefined;
 
 export const metadata: Metadata = pageData
-  ? {
+  ? buildPageMetadata({
       title: pageData.seoTitle,
       description: pageData.seoDescription,
-      alternates: {
-        canonical: pageData.path,
-      },
-    }
+      path: pageData.path,
+    })
   : {
       title: 'Page introuvable | Qory',
     };

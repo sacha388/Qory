@@ -1,16 +1,15 @@
 import type { Metadata } from 'next';
 import StaticInfoPage from '@/app/components/static-info-page';
+import { buildPageMetadata } from '@/app/lib/metadata';
 
 const pageDescription =
   'Politique de confidentialité Qory (qory.fr) : données collectées, finalités, bases légales, cookies, sous-traitants, transferts hors EEE, durées, sécurité, droits RGPD et CNIL.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Politique de confidentialité Qory | RGPD, données et droits',
   description: pageDescription,
-  alternates: {
-    canonical: '/confidentialite',
-  },
-};
+  path: '/confidentialite',
+});
 
 export default function ConfidentialitePage() {
   return (

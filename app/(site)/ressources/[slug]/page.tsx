@@ -6,6 +6,7 @@ import ResourceArticleFaq from '@/app/components/resource-article-faq';
 import ResourceArticleShareRow from '@/app/components/resource-article-share-row';
 import ResourceArticleVisual from '@/app/components/resource-article-visual';
 import SecondaryPageShell from '@/app/components/secondary-page-shell';
+import { buildPageMetadata } from '@/app/lib/metadata';
 import { getSiteUrl } from '@/app/lib/site-url';
 import { getResourceArticleBySlug, resourceArticles } from '@/app/lib/resources-content';
 
@@ -31,13 +32,14 @@ export async function generateMetadata({
 
   const metaTitle = article.seoTitle ?? article.title;
 
-  return {
+  return buildPageMetadata({
     title: `${metaTitle} | Qory`,
     description: article.description,
-    alternates: {
-      canonical: `/ressources/${article.slug}`,
-    },
-  };
+    path: `/ressources/${article.slug}`,
+    imageUrl: article.imageSrc,
+    imageAlt: article.imageAlt,
+    type: 'article',
+  });
 }
 
 export default async function ResourceArticlePage({

@@ -1,16 +1,15 @@
 import type { Metadata } from 'next';
 import StaticInfoPage from '@/app/components/static-info-page';
+import { buildPageMetadata } from '@/app/lib/metadata';
 
 const pageDescription =
   'Conditions générales d’utilisation et de vente Qory (qory.fr) : objet du service, commande, paiement Stripe, rétractation, garantie, obligations, propriété intellectuelle, médiation et droit applicable.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Conditions générales Qory | CGU et CGV',
   description: pageDescription,
-  alternates: {
-    canonical: '/conditions',
-  },
-};
+  path: '/conditions',
+});
 
 export default function ConditionsPage() {
   return (

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import SecondaryPageShell from '@/app/components/secondary-page-shell';
+import { buildPageMetadata } from '@/app/lib/metadata';
 import { getSiteUrl } from '@/app/lib/site-url';
 import {
   getUseCaseFamilyBySlug,
@@ -29,13 +30,11 @@ export async function generateMetadata({
     };
   }
 
-  return {
+  return buildPageMetadata({
     title: `${familyData.label} | Cas d’usage Qory`,
     description: familyData.hubDescription,
-    alternates: {
-      canonical: `/cas-usage/${familyData.slug}`,
-    },
-  };
+    path: `/cas-usage/${familyData.slug}`,
+  });
 }
 
 export default async function UseCaseFamilyPage({
