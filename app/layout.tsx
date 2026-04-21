@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     locale: 'fr_FR',
     images: [
       {
-        url: '/opengraph-image',
+        url: '/og-image.png',
         width: 1200,
         height: 630,
         alt: 'Qory - Mesurez votre visibilité IA',
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Qory | Mesurez votre visibilité IA',
     description: 'Découvrez si votre site ressort dans les réponses IA.',
-    images: ['/twitter-image'],
+    images: ['/og-image.png'],
   },
 };
 

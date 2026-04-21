@@ -9,7 +9,7 @@ type BuildPageMetadataParams = {
   type?: 'website' | 'article';
 };
 
-const DEFAULT_IMAGE_URL = '/opengraph-image';
+const DEFAULT_IMAGE_URL = '/og-image.png';
 
 export function buildPageMetadata({
   title,
