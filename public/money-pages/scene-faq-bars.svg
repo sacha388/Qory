@@ -1,0 +1,33 @@
+<svg width="1600" height="360" viewBox="0 0 1600 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="360" fill="#111214"/>
+
+  <rect x="108" y="56" width="398" height="236" rx="30" fill="#F7F4ED"/>
+  <rect x="108" y="56" width="398" height="30" rx="15" fill="#69D33F"/>
+  <circle cx="184" cy="152" r="24" fill="#141416"/>
+  <rect x="226" y="140" width="176" height="20" rx="10" fill="#D8D3CA"/>
+  <rect x="160" y="206" width="230" height="16" rx="8" fill="#E2DED6"/>
+  <rect x="160" y="238" width="174" height="16" rx="8" fill="#E2DED6"/>
+  <circle cx="446" cy="246" r="22" fill="#141416"/>
+  <path d="M446 236V256" stroke="#F7F4ED" stroke-width="6" stroke-linecap="round"/>
+  <path d="M436 246H456" stroke="#F7F4ED" stroke-width="6" stroke-linecap="round"/>
+
+  <rect x="602" y="32" width="398" height="236" rx="30" fill="#F7F4ED"/>
+  <rect x="602" y="32" width="398" height="30" rx="15" fill="#4BA7F5"/>
+  <circle cx="678" cy="128" r="24" fill="#141416"/>
+  <rect x="720" y="116" width="176" height="20" rx="10" fill="#D8D3CA"/>
+  <rect x="654" y="182" width="230" height="16" rx="8" fill="#E2DED6"/>
+  <rect x="654" y="214" width="174" height="16" rx="8" fill="#E2DED6"/>
+  <circle cx="940" cy="222" r="22" fill="#141416"/>
+  <path d="M940 212V232" stroke="#F7F4ED" stroke-width="6" stroke-linecap="round"/>
+  <path d="M930 222H950" stroke="#F7F4ED" stroke-width="6" stroke-linecap="round"/>
+
+  <rect x="1096" y="68" width="398" height="236" rx="30" fill="#F7F4ED"/>
+  <rect x="1096" y="68" width="398" height="30" rx="15" fill="#F16B5D"/>
+  <circle cx="1172" cy="164" r="24" fill="#141416"/>
+  <rect x="1214" y="152" width="176" height="20" rx="10" fill="#D8D3CA"/>
+  <rect x="1148" y="218" width="230" height="16" rx="8" fill="#E2DED6"/>
+  <rect x="1148" y="250" width="174" height="16" rx="8" fill="#E2DED6"/>
+  <circle cx="1434" cy="258" r="22" fill="#141416"/>
+  <path d="M1434 248V268" stroke="#F7F4ED" stroke-width="6" stroke-linecap="round"/>
+  <path d="M1424 258H1444" stroke="#F7F4ED" stroke-width="6" stroke-linecap="round"/>
+</svg>

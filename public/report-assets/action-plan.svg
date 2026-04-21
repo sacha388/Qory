@@ -1,0 +1,23 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="900" fill="#17110A"/>
+  <g transform="translate(0 -25)">
+  <path d="M250 610C410 610 442 306 620 306C798 306 820 610 998 610C1176 610 1198 306 1350 306" stroke="#F4B43A" stroke-width="18" stroke-linecap="round"/>
+  <path d="M250 610C410 610 442 306 620 306C798 306 820 610 998 610C1176 610 1198 306 1350 306" stroke="#F7F4ED" stroke-opacity="0.42" stroke-width="4" stroke-linecap="round"/>
+  <g>
+    <circle cx="250" cy="610" r="34" fill="#F7F4ED"/>
+    <text x="250" y="620" text-anchor="middle" fill="#17110A" font-family="Google Sans, Arial, sans-serif" font-size="26" font-weight="800">01</text>
+  </g>
+  <g>
+    <circle cx="620" cy="306" r="34" fill="#F4B43A"/>
+    <text x="620" y="316" text-anchor="middle" fill="#17110A" font-family="Google Sans, Arial, sans-serif" font-size="26" font-weight="800">02</text>
+  </g>
+  <g>
+    <circle cx="998" cy="610" r="34" fill="#F7F4ED"/>
+    <text x="998" y="620" text-anchor="middle" fill="#17110A" font-family="Google Sans, Arial, sans-serif" font-size="26" font-weight="800">03</text>
+  </g>
+  <g>
+    <circle cx="1350" cy="306" r="34" fill="#F7F4ED"/>
+    <text x="1350" y="316" text-anchor="middle" fill="#17110A" font-family="Google Sans, Arial, sans-serif" font-size="26" font-weight="800">04</text>
+  </g>
+  </g>
+</svg>

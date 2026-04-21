@@ -1,0 +1,206 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Google Sans";
+  src:
+    url("/fonts/google%20sans/GoogleSans-VariableFont_GRAD%2Copsz%2Cwght.ttf")
+      format("truetype-variations"),
+    url("/fonts/google%20sans/GoogleSans-VariableFont_GRAD%2Copsz%2Cwght.ttf")
+      format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Google Sans";
+  src:
+    url("/fonts/google%20sans/GoogleSans-Italic-VariableFont_GRAD%2Copsz%2Cwght.ttf")
+      format("truetype-variations"),
+    url("/fonts/google%20sans/GoogleSans-Italic-VariableFont_GRAD%2Copsz%2Cwght.ttf")
+      format("truetype");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  --site-loader-color: #4BA7F5;
+  --site-loader-color-light: #8CCAFF;
+  --site-loader-shadow: rgba(75, 167, 245, 0.32);
+}
+
+html {
+  overflow-x: clip;
+}
+
+body {
+  overflow-x: clip;
+  background: #050506;
+  color: #ffffff;
+  font-family: "Google Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif;
+}
+
+.site-grid-bg {
+  position: relative;
+  overflow: visible;
+  isolation: isolate;
+  background: #050506;
+}
+
+.site-grid-bg::before {
+  content: none;
+}
+
+.site-grid-bg::after {
+  content: none;
+}
+
+/* Ne pas forcer position:relative sur le header (sinon `fixed` ne reste pas au viewport). */
+.site-grid-bg > *:not(.site-chrome-ignore-grid-stack) {
+  position: relative;
+  z-index: 1;
+}
+
+.site-grid-bg-light {
+  position: relative;
+  overflow: visible;
+  isolation: isolate;
+  background: #ffffff;
+}
+
+.site-grid-bg-light::before {
+  content: none;
+}
+
+.site-grid-bg-light > *:not(.site-chrome-ignore-grid-stack) {
+  position: relative;
+  z-index: 1;
+}
+
+.ds-shell {
+  background: #050506;
+  color: #ffffff;
+}
+
+.ds-card {
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #101113;
+}
+
+.ds-card-muted {
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #181a1f;
+}
+
+.ds-card-flat {
+  border-radius: 18px;
+  background: #181a1f;
+}
+
+.report-shell {
+  background: #050506;
+}
+
+.report-shell .ds-card {
+  background: #101113;
+}
+
+.report-shell .bg-elevated {
+  background-color: #181a1f;
+}
+
+.report-shell .border-elevated {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.ds-shadow-soft {
+  box-shadow: none;
+}
+
+.ds-shell .text-primary,
+.report-shell .text-primary,
+.ds-card .text-primary,
+.ds-card-muted .text-primary,
+.bg-surface .text-primary,
+.bg-elevated .text-primary {
+  color: #ffffff;
+}
+
+.ds-shell .text-secondary,
+.report-shell .text-secondary,
+.ds-card .text-secondary,
+.ds-card-muted .text-secondary,
+.bg-surface .text-secondary,
+.bg-elevated .text-secondary {
+  color: #c8cdd6;
+}
+
+.ds-shell .text-tertiary,
+.report-shell .text-tertiary,
+.ds-card .text-tertiary,
+.ds-card-muted .text-tertiary,
+.bg-surface .text-tertiary,
+.bg-elevated .text-tertiary {
+  color: #8e96a3;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .cv-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 960px;
+  }
+}
+
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(6px);
+  }
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+.route-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  width: 100%;
+  height: 2px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.route-progress--visible {
+  opacity: 1;
+}
+
+.route-progress__bar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  background: linear-gradient(
+    90deg,
+    rgba(75, 167, 245, 0.9) 0%,
+    var(--site-loader-color) 72%,
+    var(--site-loader-color-light) 100%
+  );
+  box-shadow: 0 0 12px var(--site-loader-shadow);
+  transition: transform 160ms ease-out;
+  will-change: transform;
+}
