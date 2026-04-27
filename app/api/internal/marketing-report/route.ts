@@ -16,6 +16,9 @@ import {
 } from '@/lib/scanner/paid-scan-catalog';
 import { assertSafeExternalUrl } from '@/lib/security/ssrf';
 import { normalizeScanUrlInput, parseJsonObject, parseOptionalString } from '@/lib/security/validation';
+import type { AiProviderId } from '@/types';
+
+const INTERNAL_PROVIDER_IDS: readonly AiProviderId[] = ['openai', 'anthropic', 'perplexity'];
 
 function isAuthorizedInternalRequest(request: NextRequest, token: string | null): boolean {
   const expectedToken = process.env.INTERNAL_REPORT_TOKEN?.trim();
@@ -25,6 +28,18 @@ function isAuthorizedInternalRequest(request: NextRequest, token: string | null)
 
   const headerToken = request.headers.get('x-internal-report-token')?.trim() || null;
   return headerToken === expectedToken || token === expectedToken;
+}
+
+function normalizeInternalProviderSelection(value: unknown): AiProviderId[] {
+  if (!Array.isArray(value)) {
+    return [...INTERNAL_PROVIDER_IDS];
+  }
+
+  const selected = value.filter((provider): provider is AiProviderId =>
+    INTERNAL_PROVIDER_IDS.includes(provider as AiProviderId)
+  );
+
+  return selected.length > 0 ? Array.from(new Set(selected)) : [...INTERNAL_PROVIDER_IDS];
 }
 
 export async function POST(request: NextRequest) {
@@ -65,6 +80,7 @@ export async function POST(request: NextRequest) {
 
     const rawUrl = parseOptionalString(body.url);
     const userContext = normalizePaidScanQuestionnaireInput(body.userContext);
+    const providerSelection = normalizeInternalProviderSelection(body.providers);
 
     if (!rawUrl) {
       return NextResponse.json({ error: 'URL requise' }, { status: 400 });
@@ -80,7 +96,13 @@ export async function POST(request: NextRequest) {
     const normalizedUrl = normalizeScanUrlInput(rawUrl);
     const safeUrl = await assertSafeExternalUrl(normalizedUrl);
     const activityEntry = getPaidScanActivityCatalogEntry(userContext.type, userContext.activity);
-    const scanContext = buildAuditScanContext(userContext);
+    const baseScanContext = buildAuditScanContext(userContext);
+    const scanContext = baseScanContext
+      ? {
+          ...baseScanContext,
+          providerSelection,
+        }
+      : null;
 
     if (!activityEntry || !scanContext) {
       return NextResponse.json(

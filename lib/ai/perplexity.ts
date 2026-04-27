@@ -170,13 +170,14 @@ async function executePerplexityRequest(
         messages: [{ role: 'user', content: structuredPrompt }],
         temperature,
         max_tokens: AUDIT_MAX_TOKENS,
-        response_format: { type: 'json_object' },
       }),
       signal: controller.signal,
     });
 
     if (!response.ok) {
-      throw new Error(`Perplexity API error: ${response.status}`);
+      const errorBody = await response.text().catch(() => '');
+      const details = errorBody.replace(/\s+/g, ' ').trim().slice(0, 240);
+      throw new Error(`Perplexity API error: ${response.status}${details ? ` - ${details}` : ''}`);
     }
 
     const data = await response.json();

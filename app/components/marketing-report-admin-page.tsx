@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, type FormEvent } from 'react';
-import type { AuditUserContext, PaidScanBusinessType } from '@/types';
+import type { AiProviderId, AuditUserContext, PaidScanBusinessType } from '@/types';
 import {
   PAID_SCAN_TYPE_OPTIONS,
   getPaidScanActivitiesByType,
@@ -18,6 +18,7 @@ type FormState = {
   activity: string;
   activityDetail: string;
   city: string;
+  providers: AiProviderId[];
 };
 
 const INITIAL_STATE: FormState = {
@@ -27,7 +28,14 @@ const INITIAL_STATE: FormState = {
   activity: '',
   activityDetail: '',
   city: '',
+  providers: ['openai', 'anthropic', 'perplexity'],
 };
+
+const PROVIDER_OPTIONS: Array<{ id: AiProviderId; label: string }> = [
+  { id: 'openai', label: 'ChatGPT' },
+  { id: 'anthropic', label: 'Claude' },
+  { id: 'perplexity', label: 'Perplexity' },
+];
 
 function normalizeUrl(rawUrl: string): string {
   const trimmed = rawUrl.trim();
@@ -56,6 +64,14 @@ export default function MarketingReportAdminPage() {
     setForm((previous) => ({ ...previous, ...updates }));
   };
 
+  const toggleProvider = (provider: AiProviderId) => {
+    updateForm({
+      providers: form.providers.includes(provider)
+        ? form.providers.filter((item) => item !== provider)
+        : [...form.providers, provider],
+    });
+  };
+
   const buildUserContext = (): AuditUserContext | null => {
     if (!form.type || !form.activity) return null;
     const activity = getPaidScanActivityCatalogEntry(form.type, form.activity);
@@ -81,6 +97,11 @@ export default function MarketingReportAdminPage() {
 
     if (!form.token.trim()) {
       setError('Entre le mot de passe interne.');
+      return;
+    }
+
+    if (form.providers.length === 0) {
+      setError('Choisis au moins un provider IA.');
       return;
     }
 
@@ -114,6 +135,7 @@ export default function MarketingReportAdminPage() {
           token: form.token.trim(),
           url: normalizedUrl,
           userContext,
+          providers: form.providers,
         }),
       });
 
@@ -176,8 +198,32 @@ export default function MarketingReportAdminPage() {
               />
             </label>
 
+            <div>
+              <span className="mb-2 block text-sm font-medium text-white/75">3. Providers à appeler</span>
+              <div className="grid grid-cols-3 gap-2">
+                {PROVIDER_OPTIONS.map((provider) => {
+                  const active = form.providers.includes(provider.id);
+                  return (
+                    <button
+                      key={provider.id}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => toggleProvider(provider.id)}
+                      className={`h-11 rounded-[16px] border px-3 text-sm font-semibold transition ${
+                        active
+                          ? 'border-white bg-white text-black'
+                          : 'border-white/[0.12] bg-white/[0.06] text-white/60 hover:bg-white/[0.10] hover:text-white'
+                      }`}
+                    >
+                      {provider.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <label className="block">
-              <span className="mb-2 block text-sm font-medium text-white/75">3. Type de site</span>
+              <span className="mb-2 block text-sm font-medium text-white/75">4. Type de site</span>
               <select
                 value={form.type}
                 onChange={(event) =>
@@ -200,7 +246,7 @@ export default function MarketingReportAdminPage() {
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-sm font-medium text-white/75">4. Activité</span>
+              <span className="mb-2 block text-sm font-medium text-white/75">5. Activité</span>
               <select
                 value={form.activity}
                 onChange={(event) => updateForm({ activity: event.target.value, activityDetail: '', city: '' })}
@@ -218,7 +264,7 @@ export default function MarketingReportAdminPage() {
 
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-white/75">
-                5. Précision de l’activité
+                6. Précision de l’activité
               </span>
               <div className="flex min-h-12 items-center rounded-[16px] border border-white/[0.12] bg-white/[0.06] px-4 transition focus-within:border-white/[0.28]">
                 <span className="shrink-0 pr-[0.35ch] text-sm text-white/45">
@@ -237,7 +283,7 @@ export default function MarketingReportAdminPage() {
 
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-white/75">
-                6. Localisation {needsCity ? (cityRequired ? '' : '(optionnel)') : '(non utilisée)'}
+                7. Localisation {needsCity ? (cityRequired ? '' : '(optionnel)') : '(non utilisée)'}
               </span>
               <input
                 type="text"

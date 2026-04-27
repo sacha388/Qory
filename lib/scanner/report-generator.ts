@@ -992,8 +992,11 @@ function calculateProviderHealth(analyses: AnalysisResult[]) {
     providerStats.openai.unavailable +
     providerStats.anthropic.unavailable +
     providerStats.perplexity.unavailable;
+  const hasProviderData = Object.values(providerStats).some((stats) => stats.total > 0);
   const unconfiguredProviders = Object.entries(providerStats)
-    .filter(([, stats]) => stats.configured === 0 && stats.unconfigured > 0)
+    .filter(([, stats]) =>
+      stats.configured === 0 && (stats.unconfigured > 0 || (hasProviderData && stats.total === 0))
+    )
     .map(([provider]) => provider);
   const configuredProviders = Object.values(providerStats).filter((stats) => stats.configured > 0).length;
 

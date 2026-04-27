@@ -1,5 +1,6 @@
 // Core Audit Types
 export type AuditRetentionState = 'active' | 'anonymized';
+export type AiProviderId = 'openai' | 'anthropic' | 'perplexity';
 
 export type PaidScanBusinessType =
   | 'commerce_restauration'
@@ -41,6 +42,7 @@ export interface AuditScanContext {
   domainVerticalHint: PromptProfileSnapshot['domainVertical'] | null;
   actorSingular: string;
   actorPlural: string;
+  providerSelection?: AiProviderId[];
 }
 
 export interface Audit {
@@ -235,7 +237,7 @@ export type PageRole =
 // AI Response Types
 export interface AIResponse {
   model: string;
-  provider: 'openai' | 'anthropic' | 'perplexity';
+  provider: AiProviderId;
   prompt: string;
   response: string;
   error?: string;

@@ -18,6 +18,7 @@ import { getAiRuntimeSummary, getProviderRuntimeSource, shouldUseMockData } from
 import { logError, logInfo, logWarn } from '@/lib/logger';
 import type {
   AIResponse,
+  AiProviderId,
   AnalysisResult,
   Audit,
   FactAnalysisResult,
@@ -27,8 +28,7 @@ import type {
   ScoreResult,
 } from '@/types';
 
-const PROVIDERS_PER_PROMPT = 3;
-const FACT_CHECK_PROVIDER_CALLS = 3;
+const DEFAULT_AI_PROVIDERS: readonly AiProviderId[] = ['openai', 'anthropic', 'perplexity'];
 const SCORING_PROMPT_LIMIT = 10;
 const INSIGHT_PROMPT_LIMIT = 2;
 const INSIGHT_PROVIDERS_PER_PROMPT = 1;
@@ -89,6 +89,19 @@ export async function runScanPipelineForAudit(
 
   await runFreeScanPipeline(audit);
   return 'free';
+}
+
+function resolveProviderSelection(audit: Audit): AiProviderId[] {
+  const selected = audit.scan_context?.providerSelection;
+  if (!Array.isArray(selected)) {
+    return [...DEFAULT_AI_PROVIDERS];
+  }
+
+  const providers = selected.filter((provider): provider is AiProviderId =>
+    DEFAULT_AI_PROVIDERS.includes(provider as AiProviderId)
+  );
+
+  return providers.length > 0 ? Array.from(new Set(providers)) : [...DEFAULT_AI_PROVIDERS];
 }
 
 async function runFreeScanPipeline(audit: Audit): Promise<void> {
@@ -198,6 +211,8 @@ async function runPaidScanPipeline(audit: Audit): Promise<void> {
   const useMockMode = shouldUseMockData();
   const aiRuntime = getAiRuntimeSummary();
   const providerTimeoutMs = useMockMode ? MOCK_PROVIDER_TIMEOUT_MS : REAL_PROVIDER_TIMEOUT_MS;
+  const selectedProviders = resolveProviderSelection(audit);
+  const insightProviderCalls = selectedProviders.includes('openai') ? INSIGHT_PROVIDERS_PER_PROMPT : 0;
 
   logInfo('scan_started', {
     auditId: audit.id,
@@ -380,9 +395,10 @@ Adresse: ${crawl.businessInfo.address || 'N/A'}`, undefined, { timeoutMs: provid
       selected_scoring_prompt_count: scoringPrompts.length,
       selected_insight_prompt_count: insightPrompts.length,
       provider_calls_planned:
-        scoringPrompts.length * PROVIDERS_PER_PROMPT +
-        insightPrompts.length * INSIGHT_PROVIDERS_PER_PROMPT +
-        FACT_CHECK_PROVIDER_CALLS,
+        scoringPrompts.length * selectedProviders.length +
+        insightPrompts.length * insightProviderCalls +
+        selectedProviders.length,
+      selected_providers: selectedProviders,
     });
 
     const marketContext: MarketContext = {
@@ -402,9 +418,9 @@ Adresse: ${crawl.businessInfo.address || 'N/A'}`, undefined, { timeoutMs: provid
     let completedQueries = 0;
     const totalQueries = Math.max(
       1,
-      scoringPrompts.length * PROVIDERS_PER_PROMPT +
-        insightPrompts.length * INSIGHT_PROVIDERS_PER_PROMPT +
-        FACT_CHECK_PROVIDER_CALLS
+      scoringPrompts.length * selectedProviders.length +
+        insightPrompts.length * insightProviderCalls +
+        selectedProviders.length
     );
 
     if (scoringPrompts.length > 0 || insightPrompts.length > 0) {
@@ -427,14 +443,15 @@ Adresse: ${crawl.businessInfo.address || 'N/A'}`, undefined, { timeoutMs: provid
                   marketContext,
                   timeoutMs: providerTimeoutMs,
                   searchEnabled: WEB_SEARCH_ENABLED_FOR_SCORING_PROMPTS,
+                  providers: selectedProviders,
                 });
 
-                await updateQueryProgress(PROVIDERS_PER_PROMPT);
+                await updateQueryProgress(selectedProviders.length);
                 return responses;
               }
             )
-          : Promise.resolve([] as Array<[AIResponse, AIResponse, AIResponse]>),
-        insightPrompts.length > 0
+          : Promise.resolve([] as AIResponse[][]),
+        insightPrompts.length > 0 && insightProviderCalls > 0
           ? queryInsightPrompts({
               auditId: audit.id,
               prompts: insightPrompts,
@@ -490,6 +507,7 @@ Adresse: ${crawl.businessInfo.address || 'N/A'}`, undefined, { timeoutMs: provid
       auditId: audit.id,
       businessName,
       timeoutMs: providerTimeoutMs,
+      providers: selectedProviders,
     });
     logInfo('scan_fact_response_overview', {
       auditId: audit.id,
@@ -498,7 +516,7 @@ Adresse: ${crawl.businessInfo.address || 'N/A'}`, undefined, { timeoutMs: provid
       provider_summary: summarizeProviderResponses(factResponses),
     });
 
-    completedQueries += FACT_CHECK_PROVIDER_CALLS;
+    completedQueries += selectedProviders.length;
     const factualProgress = Math.min(
       80,
       40 + Math.floor((completedQueries / totalQueries) * 40)
@@ -694,12 +712,14 @@ type QueryProvidersParams = {
   marketContext?: MarketContext;
   timeoutMs: number;
   searchEnabled?: boolean;
+  providers: AiProviderId[];
 };
 
 type QueryFactProvidersParams = {
   auditId: string;
   businessName: string;
   timeoutMs: number;
+  providers: AiProviderId[];
 };
 
 type QueryInsightPromptsParams = {
@@ -715,40 +735,44 @@ type QueryInsightPromptsParams = {
 
 async function queryPromptAcrossProviders(
   params: QueryProvidersParams
-): Promise<[AIResponse, AIResponse, AIResponse]> {
-  const { auditId, prompt, businessName, marketContext, timeoutMs, searchEnabled } = params;
-
-  const openaiPromise = queryProviderWithTelemetry({
-    auditId,
-    provider: 'openai',
-    model: searchEnabled ? 'gpt-4o-mini-search-preview' : 'gpt-5.4-mini',
-    prompt,
-    timeoutMs,
-    searchEnabled,
-    query: () => queryOpenAI(prompt, businessName, marketContext, { searchEnabled, timeoutMs }),
+): Promise<AIResponse[]> {
+  const { auditId, prompt, businessName, marketContext, timeoutMs, searchEnabled, providers } = params;
+  const queries = providers.map((provider) => {
+    switch (provider) {
+      case 'openai':
+        return queryProviderWithTelemetry({
+          auditId,
+          provider: 'openai',
+          model: searchEnabled ? 'gpt-4o-mini-search-preview' : 'gpt-5.4-mini',
+          prompt,
+          timeoutMs,
+          searchEnabled,
+          query: () => queryOpenAI(prompt, businessName, marketContext, { searchEnabled, timeoutMs }),
+        });
+      case 'anthropic':
+        return queryProviderWithTelemetry({
+          auditId,
+          provider: 'anthropic',
+          model: searchEnabled ? 'claude-sonnet-4-20250514' : 'claude-haiku-4-5',
+          prompt,
+          timeoutMs,
+          searchEnabled,
+          query: () => queryAnthropic(prompt, businessName, marketContext, { searchEnabled, timeoutMs }),
+        });
+      case 'perplexity':
+        return queryProviderWithTelemetry({
+          auditId,
+          provider: 'perplexity',
+          model: 'sonar',
+          prompt,
+          timeoutMs,
+          searchEnabled: true,
+          query: () => queryPerplexity(prompt, businessName, marketContext, { timeoutMs }),
+        });
+    }
   });
 
-  const anthropicPromise = queryProviderWithTelemetry({
-    auditId,
-    provider: 'anthropic',
-    model: searchEnabled ? 'claude-sonnet-4-20250514' : 'claude-haiku-4-5',
-    prompt,
-    timeoutMs,
-    searchEnabled,
-    query: () => queryAnthropic(prompt, businessName, marketContext, { searchEnabled, timeoutMs }),
-  });
-
-  const perplexityPromise = queryProviderWithTelemetry({
-    auditId,
-    provider: 'perplexity',
-    model: 'sonar',
-    prompt,
-    timeoutMs,
-    searchEnabled: true,
-    query: () => queryPerplexity(prompt, businessName, marketContext, { timeoutMs }),
-  });
-
-  return Promise.all([openaiPromise, anthropicPromise, perplexityPromise]);
+  return Promise.all(queries);
 }
 
 async function queryInsightPrompts(
@@ -815,45 +839,45 @@ async function queryInsightPrompts(
 
 async function queryFactCheckAcrossProviders(
   params: QueryFactProvidersParams
-): Promise<[AIResponse, AIResponse, AIResponse]> {
-  const { auditId, businessName, timeoutMs } = params;
+): Promise<AIResponse[]> {
+  const { auditId, businessName, timeoutMs, providers } = params;
   const prompt = buildBusinessFactsQuery(businessName);
-
-  const openaiWebPromise = queryProviderWithTelemetry({
-    auditId,
-    provider: 'openai',
-    model: 'gpt-4o-mini-search-preview',
-    prompt,
-    timeoutMs,
-    searchEnabled: true,
-    query: () => queryOpenAIFacts(businessName, { searchEnabled: true, timeoutMs }),
+  const queries = providers.map((provider) => {
+    switch (provider) {
+      case 'openai':
+        return queryProviderWithTelemetry({
+          auditId,
+          provider: 'openai',
+          model: 'gpt-4o-mini-search-preview',
+          prompt,
+          timeoutMs,
+          searchEnabled: true,
+          query: () => queryOpenAIFacts(businessName, { searchEnabled: true, timeoutMs }),
+        });
+      case 'anthropic':
+        return queryProviderWithTelemetry({
+          auditId,
+          provider: 'anthropic',
+          model: 'claude-sonnet-4-20250514',
+          prompt,
+          timeoutMs,
+          searchEnabled: true,
+          query: () => queryAnthropicFacts(businessName, { searchEnabled: true, timeoutMs }),
+        });
+      case 'perplexity':
+        return queryProviderWithTelemetry({
+          auditId,
+          provider: 'perplexity',
+          model: 'sonar',
+          prompt,
+          timeoutMs,
+          searchEnabled: true,
+          query: () => queryPerplexityFacts(businessName, { timeoutMs }),
+        });
+    }
   });
 
-  const anthropicWebPromise = queryProviderWithTelemetry({
-    auditId,
-    provider: 'anthropic',
-    model: 'claude-sonnet-4-20250514',
-    prompt,
-    timeoutMs,
-    searchEnabled: true,
-    query: () => queryAnthropicFacts(businessName, { searchEnabled: true, timeoutMs }),
-  });
-
-  const perplexityPromise = queryProviderWithTelemetry({
-    auditId,
-    provider: 'perplexity',
-    model: 'sonar',
-    prompt,
-    timeoutMs,
-    searchEnabled: true,
-    query: () => queryPerplexityFacts(businessName, { timeoutMs }),
-  });
-
-  return Promise.all([
-    openaiWebPromise,
-    anthropicWebPromise,
-    perplexityPromise,
-  ]);
+  return Promise.all(queries);
 }
 
 type QueryProviderParams = {
