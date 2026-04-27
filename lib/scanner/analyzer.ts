@@ -430,7 +430,11 @@ export async function analyzeResponse(params: AnalyzeResponseParams): Promise<An
     prompt,
     primary: structured?.competitors ?? [],
     genericPrimary: structured?.genericAlternatives ?? [],
-    allowHeuristicFallback: !structured,
+    allowHeuristicFallback:
+      !structured ||
+      (response.provider === 'perplexity' &&
+        shouldExpectCompetitors(prompt) &&
+        (structured.competitors.length === 0 && structured.topEntities.length === 0)),
   });
   const competitors = resolvedCompetitors.all.slice(0, 5);
   const genericAlternatives = resolvedCompetitors.generic.slice(0, 5);

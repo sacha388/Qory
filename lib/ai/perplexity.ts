@@ -13,13 +13,19 @@ import { logWarn } from '@/lib/logger';
 const apiKey = process.env.PERPLEXITY_API_KEY;
 const useMock = shouldUseMockData();
 const providerSource = getProviderRuntimeSource('perplexity');
-const AUDIT_MAX_TOKENS = 800;
+const AUDIT_MAX_TOKENS = 1400;
 const PERPLEXITY_MAX_CONCURRENT = 5;
 const DEFAULT_PERPLEXITY_TIMEOUT_MS = 30000;
 
 type QueryOptions = {
   temperature?: number;
   timeoutMs?: number;
+};
+
+type PerplexitySearchResult = {
+  title?: string;
+  url?: string;
+  snippet?: string;
 };
 
 let perplexityInFlight = 0;
@@ -181,7 +187,8 @@ async function executePerplexityRequest(
     }
 
     const data = await response.json();
-    return data.choices?.[0]?.message?.content || '';
+    const content = data.choices?.[0]?.message?.content || '';
+    return appendPerplexitySources(content, data.citations, data.search_results);
   } catch (error) {
     if (controller.signal.aborted) {
       throw new Error(`perplexity timeout after ${timeoutMs}ms`);
@@ -190,6 +197,46 @@ async function executePerplexityRequest(
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+function appendPerplexitySources(
+  content: string,
+  citations: unknown,
+  searchResults: unknown
+): string {
+  const citationUrls = Array.isArray(citations)
+    ? citations.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    : [];
+  const results = Array.isArray(searchResults)
+    ? searchResults
+        .map((item): PerplexitySearchResult | null => {
+          if (!item || typeof item !== 'object') return null;
+          const result = item as Record<string, unknown>;
+          const title = typeof result.title === 'string' ? result.title.trim() : '';
+          const url = typeof result.url === 'string' ? result.url.trim() : '';
+          const snippet = typeof result.snippet === 'string' ? result.snippet.trim() : '';
+          return title || url || snippet ? { title, url, snippet } : null;
+        })
+        .filter((item): item is PerplexitySearchResult => Boolean(item))
+    : [];
+
+  if (citationUrls.length === 0 && results.length === 0) {
+    return content;
+  }
+
+  const sourceLines = [
+    ...citationUrls.slice(0, 5).map((url, index) => `Citation ${index + 1}: ${url}`),
+    ...results.slice(0, 5).map((result, index) => {
+      const parts = [
+        result.title ? `title=${result.title}` : null,
+        result.url ? `url=${result.url}` : null,
+        result.snippet ? `snippet=${result.snippet.slice(0, 220)}` : null,
+      ].filter(Boolean);
+      return `Search result ${index + 1}: ${parts.join(' | ')}`;
+    }),
+  ];
+
+  return `${content}\n\nPerplexity sources:\n${sourceLines.join('\n')}`;
 }
 
 async function withPerplexityConcurrencyLimit<T>(fn: () => Promise<T>): Promise<T> {
