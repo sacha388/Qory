@@ -29,6 +29,17 @@ function isAuthorizedInternalRequest(request: NextRequest, token: string | null)
   return headerToken === expectedToken || token === expectedToken;
 }
 
+function formatUnknownError(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object') {
+    const obj = error as Record<string, unknown>;
+    if (typeof obj.message === 'string') return obj.message;
+    if (typeof obj.code === 'string') return `db_error: code=${obj.code}, details=${obj.details ?? 'none'}`;
+    try { return JSON.stringify(obj).slice(0, 500); } catch { /* fall through */ }
+  }
+  return String(error);
+}
+
 function normalizeInternalProviderSelection(value: unknown): AiProviderId[] {
   if (!Array.isArray(value)) {
     return [...INTERNAL_PROVIDER_IDS];
@@ -42,6 +53,7 @@ function normalizeInternalProviderSelection(value: unknown): AiProviderId[] {
 }
 
 export async function POST(request: NextRequest) {
+  let step = 'init';
   try {
     assertAllowedOrigin(request);
 
@@ -92,9 +104,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    step = 'createAudit';
     const audit = await db.createAudit(safeUrl);
     const accessToken = issueAuditAccessToken(audit.id);
 
+    step = 'updateAudit';
     await db.updateAudit(audit.id, {
       user_context: userContext,
       scan_context: scanContext,
@@ -106,7 +120,10 @@ export async function POST(request: NextRequest) {
       scan_progress: 0,
       scan_step: 'Préparation du rapport marketing...',
     });
+
+    step = 'enqueueScanJob';
     await db.enqueueScanJob(audit.id);
+    step = 'done';
     void kickScanWorker(1);
 
     logInfo('internal_marketing_report_enqueued', {
@@ -129,8 +146,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    const message =
-      error instanceof Error && error.message ? error.message : 'Impossible de créer le rapport marketing';
+    const message = formatUnknownError(error);
     const normalizedMessage = message.toLowerCase();
     const isValidationError =
       normalizedMessage.includes('url') ||
@@ -147,8 +163,9 @@ export async function POST(request: NextRequest) {
 
     logError('internal_marketing_report_error', {
       phase: 'internal_marketing_report',
+      step,
       error: message,
-      errorName: error instanceof Error ? error.constructor.name : typeof error,
+      errorType: error instanceof Error ? error.constructor.name : typeof error,
       stack: error instanceof Error ? error.stack?.split('\n').slice(0, 3).join(' | ') : undefined,
     });
 
