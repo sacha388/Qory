@@ -938,7 +938,7 @@ export default function ReportPage() {
 
     setShareFeedback(null);
     setShareFallbackUrl(null);
-    const shareUrl = window.location.href;
+
     const showCopiedState = () => {
       setIsLinkCopied(true);
       if (copyResetTimeoutRef.current !== null) {
@@ -950,29 +950,55 @@ export default function ReportPage() {
       }, 1800);
     };
 
-    try {
-      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(shareUrl);
-        showCopiedState();
-        return;
-      }
-
-      setShareFallbackUrl(shareUrl);
-      setShareFeedback('Copiez le lien ci-dessous.');
-    } catch (error) {
+    const copyToClipboard = async (urlToCopy: string): Promise<boolean> => {
       try {
         if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-          await navigator.clipboard.writeText(shareUrl);
-          showCopiedState();
-          return;
+          await navigator.clipboard.writeText(urlToCopy);
+          return true;
         }
-      } catch (clipboardError) {
-        console.error('Clipboard copy fallback failed:', clipboardError);
+      } catch (error) {
+        console.warn('Clipboard write failed:', error);
+      }
+      return false;
+    };
+
+    let shareUrl: string | null = null;
+
+    if (shareToken) {
+      shareUrl = window.location.href;
+    } else {
+      try {
+        const headers: HeadersInit = { 'Content-Type': 'application/json' };
+        if (accessToken) {
+          headers.Authorization = `Bearer ${accessToken}`;
+        }
+        const response = await fetch(`/api/report/${auditId}/share`, {
+          method: 'POST',
+          headers,
+          cache: 'no-store',
+        });
+        if (response.ok) {
+          const payload = await response.json();
+          if (typeof payload?.shareUrl === 'string') {
+            shareUrl = payload.shareUrl;
+          }
+        }
+      } catch (error) {
+        console.warn('Share link generation failed:', error);
       }
 
-      setShareFallbackUrl(shareUrl);
-      setShareFeedback('Copiez le lien ci-dessous.');
+      if (!shareUrl) {
+        shareUrl = window.location.href;
+      }
     }
+
+    if (await copyToClipboard(shareUrl)) {
+      showCopiedState();
+      return;
+    }
+
+    setShareFallbackUrl(shareUrl);
+    setShareFeedback('Copiez le lien ci-dessous.');
   };
 
   const handleDownloadPdf = async () => {
