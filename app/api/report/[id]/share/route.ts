@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSiteUrl } from '@/app/lib/site-url';
 import { db } from '@/lib/supabase';
-import type { ScanResults } from '@/types';
 import { applyRateLimit } from '@/lib/security/rate-limit';
 import { logError } from '@/lib/logger';
 import { assertAllowedOrigin } from '@/lib/security/origin';
@@ -70,16 +69,6 @@ export async function POST(
 
     if (!audit.paid) {
       return NextResponse.json({ error: 'Audit non payé' }, { status: 403 });
-    }
-
-    const fullReportReady =
-      audit.status === 'completed' &&
-      ((audit.results as ScanResults | null | undefined)?.analysisMode === 'full');
-    if (!fullReportReady) {
-      return NextResponse.json(
-        { error: 'Le rapport final n’est pas encore prêt' },
-        { status: 409 }
-      );
     }
 
     const shareToken = issueAuditShareToken(id);

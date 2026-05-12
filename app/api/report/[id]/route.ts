@@ -112,7 +112,7 @@ export async function GET(
     const analysisMode = (audit.results as ScanResults | null | undefined)?.analysisMode;
     const fullReportReady = audit.status === 'completed' && analysisMode === 'full';
 
-    if (!fullReportReady) {
+    if (!fullReportReady && hasOwnerAccess) {
       if (audit.status !== 'scanning') {
         await db.updateAudit(id, {
           status: 'scanning',
@@ -139,7 +139,7 @@ export async function GET(
         }
       );
 
-      if (hasOwnerAccess && accessToken) {
+      if (accessToken) {
         response.cookies.set({
           name: getAuditAccessCookieName(id),
           value: accessToken,
