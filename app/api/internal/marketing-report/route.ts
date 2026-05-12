@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/supabase';
 import { kickScanWorker } from '@/lib/scanner/worker';
 import { logError, logInfo } from '@/lib/logger';
-import { applyRateLimit } from '@/lib/security/rate-limit';
 import { assertAllowedOrigin } from '@/lib/security/origin';
 import {
   getAuditAccessCookieName,
@@ -44,24 +43,6 @@ function normalizeInternalProviderSelection(value: unknown): AiProviderId[] {
 
 export async function POST(request: NextRequest) {
   try {
-    const rateLimit = await applyRateLimit(request, {
-      keyPrefix: 'api:internal:marketing-report',
-      maxRequests: 20,
-      windowMs: 60_000,
-    });
-
-    if (!rateLimit.allowed) {
-      return NextResponse.json(
-        { error: 'Trop de requêtes' },
-        {
-          status: 429,
-          headers: {
-            'Retry-After': String(rateLimit.retryAfterSeconds),
-          },
-        }
-      );
-    }
-
     assertAllowedOrigin(request);
 
     const body = parseJsonObject(await request.json().catch(() => null));
@@ -167,6 +148,8 @@ export async function POST(request: NextRequest) {
     logError('internal_marketing_report_error', {
       phase: 'internal_marketing_report',
       error: message,
+      errorName: error instanceof Error ? error.constructor.name : typeof error,
+      stack: error instanceof Error ? error.stack?.split('\n').slice(0, 3).join(' | ') : undefined,
     });
 
     if (isValidationError) {

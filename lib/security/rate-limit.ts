@@ -8,6 +8,12 @@ export type RateLimitRule = {
   windowMs: number;
 };
 
+export type RateLimitResult = {
+  allowed: boolean;
+  retryAfterSeconds: number;
+  remaining: number;
+};
+
 type Bucket = {
   count: number;
   resetAt: number;
@@ -62,18 +68,37 @@ function getClientIp(request: NextRequest): string {
   return 'unknown';
 }
 
-export async function applyRateLimit(request: NextRequest, rule: RateLimitRule) {
+function formatRateLimitError(error: unknown): string {
+  if (error instanceof Error) {
+    const supabaseError = error as Error & { code?: string; details?: string };
+    const parts = [supabaseError.message];
+    if (supabaseError.code) parts.push(`code=${supabaseError.code}`);
+    if (supabaseError.details) parts.push(`details=${supabaseError.details}`);
+    return parts.join(', ');
+  }
+  if (error && typeof error === 'object') {
+    const obj = error as Record<string, unknown>;
+    if (obj.message) return String(obj.message);
+    if (obj.code) return `db_error_code=${String(obj.code)}`;
+  }
+  return `non_error_thrown: ${typeof error}`;
+}
+
+export async function applyRateLimit(
+  request: NextRequest,
+  rule: RateLimitRule
+): Promise<RateLimitResult> {
   return applyRateLimitWithFallback(request, rule);
+}
+
+export function skipRateLimit(): RateLimitResult {
+  return { allowed: true, retryAfterSeconds: 0, remaining: -1 };
 }
 
 async function applyRateLimitWithFallback(
   request: NextRequest,
   rule: RateLimitRule
-): Promise<{
-  allowed: boolean;
-  retryAfterSeconds: number;
-  remaining: number;
-}> {
+): Promise<RateLimitResult> {
   const ip = getClientIp(request);
   const key = `${rule.keyPrefix}:${ip}`;
 
@@ -83,10 +108,8 @@ async function applyRateLimitWithFallback(
     logWarn('rate_limit_db_fallback', {
       phase: 'rate_limit',
       keyPrefix: rule.keyPrefix,
-      error:
-        error instanceof Error && error.message
-          ? error.message
-          : 'unknown_rate_limit_error',
+      ip,
+      error: formatRateLimitError(error),
     });
     return applyInMemoryRateLimit(rule, key);
   }
