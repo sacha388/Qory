@@ -84,7 +84,20 @@ export async function POST(
 
     const shareToken = issueAuditShareToken(id);
     const sharePath = appendShareTokenToPath(`/report/${id}`, shareToken);
-    const shareUrl = `${getSiteUrl()}${sharePath}`;
+    const siteUrl = getSiteUrl();
+    const isLocalhostFallback = siteUrl.includes('localhost');
+    const requestOrigin = (() => {
+      try {
+        return new URL(request.url).origin;
+      } catch {
+        return null;
+      }
+    })();
+    const baseUrl =
+      isLocalhostFallback && requestOrigin && !requestOrigin.includes('localhost')
+        ? requestOrigin
+        : siteUrl;
+    const shareUrl = `${baseUrl}${sharePath}`;
     const ttlSeconds = getAuditShareTokenTtlSeconds();
     const expiresAt = new Date(Date.now() + ttlSeconds * 1000).toISOString();
 
