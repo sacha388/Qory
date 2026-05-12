@@ -886,7 +886,12 @@ export default function ReportPage() {
       return;
     }
 
-    if (!audit || !audit.report) {
+    if (!audit) {
+      router.replace('/erreur/rapport-introuvable');
+      return;
+    }
+
+    if (!audit.report && audit.status === 'completed') {
       router.replace('/erreur/rapport-introuvable');
     }
   }, [loading, verifying, audit, router]);

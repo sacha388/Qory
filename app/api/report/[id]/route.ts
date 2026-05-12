@@ -158,13 +158,17 @@ export async function GET(
 
     let responseAudit = audit;
 
-    // Prefer the stored report once generated to avoid re-running external
-    // adjudication providers on every fetch.
-    if (audit.status === 'completed' && audit.results) {
-      responseAudit = {
-        ...audit,
-        report: audit.report ?? await generateReport(audit.id, audit.results as ScanResults),
-      };
+    if (audit.status === 'completed' && audit.results && !audit.report) {
+      try {
+        const generatedReport = await generateReport(audit.id, audit.results as ScanResults);
+        responseAudit = { ...audit, report: generatedReport };
+      } catch (reportGenError) {
+        logError('report_generation_fallback_error', {
+          phase: 'report_fetch',
+          auditId: id,
+          error: reportGenError instanceof Error ? reportGenError.message : String(reportGenError),
+        });
+      }
     }
 
     await db.touchAuditUsage(id);
