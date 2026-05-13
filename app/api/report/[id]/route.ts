@@ -64,10 +64,10 @@ export async function GET(
       logError('report_fetch_access_denied', {
         phase: 'report_fetch',
         auditId: id,
-        hasAccessToken: !!accessToken,
-        hasShareToken: !!shareToken,
-        accessTokenValid: hasOwnerAccess,
-        shareTokenValid: hasShareAccess,
+        ownerPresent: !!accessToken,
+        sharePresent: !!shareToken,
+        ownerValid: hasOwnerAccess,
+        shareValid: hasShareAccess,
       });
       return NextResponse.json(
         { error: 'Accès interdit' },
