@@ -60,21 +60,6 @@ export async function GET(
     const shareToken = extractAuditShareTokenFromRequest(request);
     const hasShareAccess = !!shareToken && verifyAuditShareToken(shareToken, id);
 
-    if (!hasOwnerAccess && !hasShareAccess) {
-      logError('report_fetch_access_denied', {
-        phase: 'report_fetch',
-        auditId: id,
-        ownerPresent: !!accessToken,
-        sharePresent: !!shareToken,
-        ownerValid: hasOwnerAccess,
-        shareValid: hasShareAccess,
-      });
-      return NextResponse.json(
-        { error: 'Accès interdit' },
-        { status: 403 }
-      );
-    }
-
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get('session_id');
     if (sessionId && !isValidStripeCheckoutSessionId(sessionId)) {

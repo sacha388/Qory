@@ -934,6 +934,8 @@ export default function ReportPage() {
     setShareFeedback(null);
     setShareFallbackUrl(null);
 
+    const shareUrl = `${window.location.origin}/report/${auditId}`;
+
     const showCopiedState = () => {
       setIsLinkCopied(true);
       if (copyResetTimeoutRef.current !== null) {
@@ -945,51 +947,14 @@ export default function ReportPage() {
       }, 1800);
     };
 
-    const copyToClipboard = async (urlToCopy: string): Promise<boolean> => {
-      try {
-        if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-          await navigator.clipboard.writeText(urlToCopy);
-          return true;
-        }
-      } catch (error) {
-        console.warn('Clipboard write failed:', error);
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+        showCopiedState();
+        return;
       }
-      return false;
-    };
-
-    let shareUrl: string | null = null;
-
-    if (shareToken) {
-      shareUrl = window.location.href;
-    } else {
-      try {
-        const headers: HeadersInit = { 'Content-Type': 'application/json' };
-        if (accessToken) {
-          headers.Authorization = `Bearer ${accessToken}`;
-        }
-        const response = await fetch(`/api/report/${auditId}/share`, {
-          method: 'POST',
-          headers,
-          cache: 'no-store',
-        });
-        if (response.ok) {
-          const payload = await response.json();
-          if (typeof payload?.shareUrl === 'string') {
-            shareUrl = payload.shareUrl;
-          }
-        }
-      } catch (error) {
-        console.warn('Share link generation failed:', error);
-      }
-
-      if (!shareUrl) {
-        shareUrl = window.location.href;
-      }
-    }
-
-    if (await copyToClipboard(shareUrl)) {
-      showCopiedState();
-      return;
+    } catch (error) {
+      console.warn('Clipboard write failed:', error);
     }
 
     setShareFallbackUrl(shareUrl);
