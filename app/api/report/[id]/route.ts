@@ -61,6 +61,14 @@ export async function GET(
     const hasShareAccess = !!shareToken && verifyAuditShareToken(shareToken, id);
 
     if (!hasOwnerAccess && !hasShareAccess) {
+      logError('report_fetch_access_denied', {
+        phase: 'report_fetch',
+        auditId: id,
+        hasAccessToken: !!accessToken,
+        hasShareToken: !!shareToken,
+        accessTokenValid: hasOwnerAccess,
+        shareTokenValid: hasShareAccess,
+      });
       return NextResponse.json(
         { error: 'Accès interdit' },
         { status: 403 }
@@ -88,6 +96,12 @@ export async function GET(
     const audit = await db.getAudit(id);
 
     if (!audit) {
+      logError('report_fetch_not_found', {
+        phase: 'report_fetch',
+        auditId: id,
+        hasOwnerAccess,
+        hasShareAccess,
+      });
       return NextResponse.json(
         { error: 'Audit introuvable' },
         { status: 404 }
@@ -95,6 +109,11 @@ export async function GET(
     }
 
     if (audit.retention_state === 'anonymized') {
+      logError('report_fetch_anonymized', {
+        phase: 'report_fetch',
+        auditId: id,
+        retentionAppliedAt: audit.retention_applied_at,
+      });
       return NextResponse.json(
         { error: 'Audit archivé' },
         { status: 410 }
